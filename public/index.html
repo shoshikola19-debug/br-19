@@ -161,7 +161,10 @@ async function loadAll(){
   try{
     const r=await fetch("/api/trains?q="+encodeURIComponent(q));const d=await r.json();
     $("allMeta").textContent="মোট "+bn(d.total)+" ট্রেনের তালিকা • দেখাচ্ছে "+bn(d.count)+" টি • ঢাকায় সময় "+bn(d.nowDhaka)+" • সময়সূচি অনুযায়ী অবস্থা (লাইভ নয়)";
-    $("allOut").innerHTML=d.trains.map(t=>'<div class="trainrow" onclick="openTrain('+t.number+')"><div><b>'+esc(t.name)+' ('+bn(t.number)+')</b><br><span class="mut">'+esc(t.from||"")+' → '+esc(t.to||"")+' • ছাড়ে '+bn(t.departure||"—")+' • পৌঁছায় '+bn(t.arrival||"—")+(t.avgDelayMin!=null?' • গড় দেরি +'+bn(t.avgDelayMin)+' মি':'')+'</span></div><div>'+pill(t.scheduleState)+'</div></div>').join("")||'<div class="loading">কোনো ট্রেন পাওয়া যায়নি।</div>';
+    // চলমান ট্রেন উপরে, এখনো না ছাড়া মাঝখানে, পৌঁছে যাওয়া নিচে
+    const order={running:0,not_departed:1,arrived:2,unknown:3};
+    const sorted=[...(d.trains||[])].sort((a,b)=>(order[a.scheduleState]!=null?order[a.scheduleState]:3)-(order[b.scheduleState]!=null?order[b.scheduleState]:3));
+    $("allOut").innerHTML=sorted.map(t=>'<div class="trainrow" onclick="openTrain('+t.number+')"><div><b>'+esc(t.name)+' ('+bn(t.number)+')</b><br><span class="mut">'+esc(t.from||"")+' → '+esc(t.to||"")+' • ছাড়ে '+bn(t.departure||"—")+' • পৌঁছায় '+bn(t.arrival||"—")+(t.avgDelayMin!=null?' • গড় দেরি +'+bn(t.avgDelayMin)+' মি':'')+'</span></div><div>'+pill(t.scheduleState)+'</div></div>').join("")||'<div class="loading">কোনো ট্রেন পাওয়া যায়নি।</div>';
   }catch(e){$("allOut").innerHTML='<div class="err">❌ তালিকা আনা যাচ্ছে না।</div>';}
 }
 function openTrain(n){showTab("train");$("q").value=n;searchTrain();}
