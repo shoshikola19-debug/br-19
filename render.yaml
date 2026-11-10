@@ -1,0 +1,14 @@
+# Render blueprint for BR 19 (free tier)
+# Deploy: push this repo to GitHub, then in Render Dashboard ->
+# "New +" -> "Blueprint" -> pick the repo. Render reads this file.
+# Free tier sleeps after ~15 min idle; first load after sleep is slow.
+services:
+  - type: web
+    name: br-19
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
