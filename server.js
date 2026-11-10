@@ -78,33 +78,41 @@ function addMin(hhmm, mins) {
   return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
 }
 
-// Schedule-based progress for a train record. Pure timetable math.
+// Schedule-based progress for a train record. Every time is shifted by the
+// train's average delay (last 7 runs): a pure-timetable estimate claims a
+// late train is far ahead of where it really is (e.g. it showed 736 already
+// past Kendua_Bazar while it had not even left Tarakandi). This is still an
+// estimate, never live data — the exact position only comes from TrainKothai.
 function scheduleProgress(train) {
   const stops = train.stops || [];
   if (stops.length < 2) return { state: "unknown", label: "তথ্য নেই" };
-  const dep = toMin(stops[0].sched), arr = toMin(stops[stops.length - 1].sched);
-  if (dep == null || arr == null) return { state: "unknown", label: "তথ্য নেই" };
-  const overnight = arr < dep;
-  const total = overnight ? arr + 1440 - dep : arr - dep;
+  const depRaw = toMin(stops[0].sched), arrRaw = toMin(stops[stops.length - 1].sched);
+  if (depRaw == null || arrRaw == null) return { state: "unknown", label: "তথ্য নেই" };
+  const avgMin = (train.delayHistory && train.delayHistory.avgMin) || 0;
+  const dep = depRaw + avgMin, arr = arrRaw + avgMin;
+  const overnight = arrRaw < depRaw;
+  const total = overnight ? arrRaw + 1440 - depRaw : arrRaw - depRaw;
   const now = dhakaNow();
   let nowJ = now.minutes;
-  if (overnight && nowJ < dep) nowJ += 1440;
+  if (overnight && nowJ < depRaw) nowJ += 1440;
   if (nowJ < dep) {
-    return { state: "not_departed", label: "এখনো ছাড়েনি", departsInMin: dep - now.minutes,
-             departure: stops[0].sched, arrival: stops[stops.length - 1].sched, progressPct: 0 };
+    return { state: "not_departed", label: "এখনো ছাড়েনি (গড় দেরি অনুযায়ী আনুমানিক)", departsInMin: dep - now.minutes,
+             departure: stops[0].sched, arrival: stops[stops.length - 1].sched,
+             estimatedDeparture: addMin(stops[0].sched, avgMin), avgDelayMin: avgMin, progressPct: 0 };
   }
   if (nowJ > dep + total) {
-    return { state: "arrived", label: "পৌঁছে গেছে (সময়সূচি অনুযায়ী)", progressPct: 100,
-             departure: stops[0].sched, arrival: stops[stops.length - 1].sched };
+    return { state: "arrived", label: "পৌঁছে গেছে (গড় দেরি অনুযায়ী আনুমানিক)", progressPct: 100,
+             departure: stops[0].sched, arrival: stops[stops.length - 1].sched,
+             estimatedArrival: addMin(stops[stops.length - 1].sched, avgMin), avgDelayMin: avgMin };
   }
   const elapsed = nowJ - dep;
   const pct = Math.round((elapsed / total) * 100);
-  // journey minutes for each stop (roll over midnight when overnight)
+  // journey minutes for each stop (roll over midnight when overnight), shifted by avg delay
   const jm = stops.map(s => {
     let v = toMin(s.sched);
     if (v == null) return null;
-    if (overnight && v < dep) v += 1440;
-    return v;
+    if (overnight && v < depRaw) v += 1440;
+    return v + avgMin;
   });
   let lastIdx = -1, nextIdx = -1;
   jm.forEach((v, i) => { if (v != null && v <= nowJ) lastIdx = i; });
@@ -113,12 +121,12 @@ function scheduleProgress(train) {
   const next = nextIdx >= 0 ? stops[nextIdx] : null;
   let minsToNext = null;
   if (next) minsToNext = jm[nextIdx] - nowJ;
-  return { state: "running", label: "চলছে (সময়সূচি অনুযায়ী)", progressPct: pct,
+  return { state: "running", label: "চলছে (গড় দেরি অনুযায়ী আনুমানিক)", progressPct: pct,
            departure: stops[0].sched, arrival: stops[stops.length - 1].sched,
            lastPassed: last ? { name: last.name, bn: last.bn, sched: last.sched, km: last.km } : null,
            nextStop: next ? { name: next.name, bn: next.bn, sched: next.sched, km: next.km, inMin: minsToNext } : null,
-           stopsCleared: lastIdx + 1, totalStops: stops.length,
-           etaByAvgDelay: addMin(stops[stops.length - 1].sched, train.delayHistory && train.delayHistory.avgMin) };
+           stopsCleared: lastIdx + 1, totalStops: stops.length, avgDelayMin: avgMin,
+           etaByAvgDelay: addMin(stops[stops.length - 1].sched, avgMin) };
 }
 
 // ---- TrainKothai fetching (polite, cached) ----
