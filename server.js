@@ -89,6 +89,12 @@ function scheduleProgress(train) {
   const depRaw = toMin(stops[0].sched), arrRaw = toMin(stops[stops.length - 1].sched);
   if (depRaw == null || arrRaw == null) return { state: "unknown", label: "তথ্য নেই" };
   const avgMin = (train.delayHistory && train.delayHistory.avgMin) || 0;
+  // Range of delays over the last 7 runs, so the app can show honestly how
+  // far today's delay can sit from the average (e.g. 736: avg +123 min, but
+  // today only +48 min — the average alone then misleads badly).
+  const runDelays = ((train.delayHistory && train.delayHistory.runs) || []).map(r => r.delayMin).filter(v => v != null);
+  const minDelayMin = runDelays.length ? Math.min.apply(null, runDelays) : null;
+  const maxDelayMin = runDelays.length ? Math.max.apply(null, runDelays) : null;
   const dep = depRaw + avgMin, arr = arrRaw + avgMin;
   const overnight = arrRaw < depRaw;
   const total = overnight ? arrRaw + 1440 - depRaw : arrRaw - depRaw;
@@ -98,12 +104,12 @@ function scheduleProgress(train) {
   if (nowJ < dep) {
     return { state: "not_departed", label: "এখনো ছাড়েনি (গড় দেরি অনুযায়ী আনুমানিক)", departsInMin: dep - now.minutes,
              departure: stops[0].sched, arrival: stops[stops.length - 1].sched,
-             estimatedDeparture: addMin(stops[0].sched, avgMin), avgDelayMin: avgMin, progressPct: 0 };
+             estimatedDeparture: addMin(stops[0].sched, avgMin), avgDelayMin: avgMin, minDelayMin: minDelayMin, maxDelayMin: maxDelayMin, progressPct: 0 };
   }
   if (nowJ > dep + total) {
     return { state: "arrived", label: "পৌঁছে গেছে (গড় দেরি অনুযায়ী আনুমানিক)", progressPct: 100,
              departure: stops[0].sched, arrival: stops[stops.length - 1].sched,
-             estimatedArrival: addMin(stops[stops.length - 1].sched, avgMin), avgDelayMin: avgMin };
+             estimatedArrival: addMin(stops[stops.length - 1].sched, avgMin), avgDelayMin: avgMin, minDelayMin: minDelayMin, maxDelayMin: maxDelayMin };
   }
   const elapsed = nowJ - dep;
   const pct = Math.round((elapsed / total) * 100);
@@ -125,7 +131,7 @@ function scheduleProgress(train) {
            departure: stops[0].sched, arrival: stops[stops.length - 1].sched,
            lastPassed: last ? { name: last.name, bn: last.bn, sched: last.sched, km: last.km } : null,
            nextStop: next ? { name: next.name, bn: next.bn, sched: next.sched, km: next.km, inMin: minsToNext } : null,
-           stopsCleared: lastIdx + 1, totalStops: stops.length, avgDelayMin: avgMin,
+           stopsCleared: lastIdx + 1, totalStops: stops.length, avgDelayMin: avgMin, minDelayMin: minDelayMin, maxDelayMin: maxDelayMin,
            etaByAvgDelay: addMin(stops[stops.length - 1].sched, avgMin) };
 }
 
