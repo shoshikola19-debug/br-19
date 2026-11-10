@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>বিআর ১৯ — ট্রেন কোথায় আছে</title>
+<meta name="description" content="বাংলাদেশ রেলওয়ের ট্রেনের সময়সূচি, দেরির ইতিহাস আর লাইভ অবস্থার লিংক — বিআর ১৯।">
+<meta name="theme-color" content="#0b3d91">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/logo.webp">
+<link rel="apple-touch-icon" href="/logo.webp">
+<style>
+:root{--blue:#0b3d91;--blue2:#1256c4;--bg:#eef3fb;--card:#fff;--ink:#12233d;--mut:#5a6b84;--line:#dbe4f0;--ok:#0a7a3d;--warn:#b45309;--bad:#b42318;--radius:14px}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,"Noto Sans Bengali","Hind Siliguri",sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--blue);color:#fff;padding:14px 16px 12px;position:sticky;top:0;z-index:10}
+.hwrap{max-width:760px;margin:0 auto;display:flex;gap:12px;align-items:center}
+.hwrap img{width:64px;height:64px;object-fit:contain;background:#fff;border-radius:12px;padding:2px}
+h1{margin:0;font-size:24px;line-height:1.1}h1 small{display:block;font-size:13px;font-weight:400;opacity:.9;margin-top:3px}
+main{max-width:760px;margin:0 auto;padding:14px 14px 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.searchrow{display:flex;gap:8px}
+input[type=search]{flex:1;font-size:17px;padding:12px;border:2px solid var(--line);border-radius:10px;font-family:inherit}
+input[type=search]:focus{outline:none;border-color:var(--blue2)}
+button{font-family:inherit;font-size:16px;background:var(--blue);color:#fff;border:0;border-radius:10px;padding:12px 16px;cursor:pointer}
+button.ghost{background:#fff;color:var(--blue);border:2px solid var(--blue)}
+button.small{padding:8px 12px;font-size:14px}
+.tabs{display:flex;gap:8px;margin:12px 0}
+.tabs button{flex:1;background:#fff;color:var(--ink);border:2px solid var(--line);padding:10px 4px;font-size:15px}
+.tabs button.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.mut{color:var(--mut);font-size:13px;line-height:1.5}
+.big{font-size:20px;font-weight:700}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:13px;font-weight:700}
+.pill.run{background:#e6f4ea;color:var(--ok)}.pill.wait{background:#fef3c7;color:var(--warn)}.pill.done{background:#e5e7eb;color:#374151}.pill.no{background:#fee2e2;color:var(--bad)}
+.bar{height:10px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin:8px 0 4px}.bar>i{display:block;height:100%;background:var(--blue2)}
+table{width:100%;border-collapse:collapse;font-size:15px}
+td,th{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--mut);font-size:13px}
+.trainrow{display:flex;justify-content:space-between;gap:10px;padding:11px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.trainrow:last-child{border-bottom:0}
+.trainrow b{font-size:16px}.trainrow .mut{font-size:13px}
+.notice{background:#fff8e1;border:1px solid #f5d67b;border-radius:var(--radius);padding:12px 14px;font-size:14px;line-height:1.6;margin-bottom:12px}
+.err{background:#fee2e2;border:1px solid #f5a3a3;border-radius:var(--radius);padding:12px 14px}
+a{color:var(--blue2)}
+footer{color:var(--mut);font-size:13px;line-height:1.6;text-align:center;padding:8px 4px 30px}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.kv div{background:#f4f7fc;border-radius:10px;padding:10px}
+.kv b{display:block;font-size:17px}.kv span{font-size:13px;color:var(--mut)}
+.hist{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.hist span{background:#f4f7fc;border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:13px}
+.loading{color:var(--mut);padding:16px;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <img src="/logo.webp" alt="বিআর ১৯ লোগো">
+    <h1>বিআর ১৯<small>বাংলাদেশ রেলওয়ে — ট্রেন কোথায় আছে, কখন ছাড়বে</small></h1>
+  </div>
+</header>
+<main>
+  <div class="notice">ℹ️ <b>লাইভ অবস্থান সম্পর্কে সত্যি কথা:</b> এই অ্যাপে ট্রেনের সময়সূচি, রুট, গত ৭ দিনের দেরির হিসাব আর সময়সূচি অনুযায়ী আনুমানিক অবস্থান দেখানো হয়। ট্রেনের <b>একদম সরাসরি অবস্থান</b> ট্রেনকোথাইয়ের লাইভ সার্ভারে থাকে, যেখানে ঢুকতে ব্রাউজারে মানুষের যাচাই (ক্লাউডফ্লেয়ার) লাগে — সার্ভার থেকে সেটা আনা যায় না। তাই প্রতিটি ট্রেনের নিচে <b>“ট্রেনকোথাইতে লাইভ দেখুন”</b> বোতাম আছে — চাপ দিলেই ব্রাউজারে সরাসরি লাইভ খুলবে। তথ্য: ট্রেনকোথাই (যাত্রীদের শেয়ার করা অবস্থান), বাংলাদেশ রেলওয়ের অফিসিয়াল ফিড নয়।</div>
+
+  <div class="card">
+    <div class="searchrow">
+      <input id="q" type="search" placeholder="ট্রেনের নাম বা নম্বর লিখুন — যেমন ৭৩৫, অগ্নিবীণা, ৩৫৪" autocomplete="off">
+      <button onclick="searchTrain()">খুঁজুন</button>
+    </div>
+    <div class="mut" id="clock" style="margin-top:8px"></div>
+  </div>
+
+  <div class="tabs">
+    <button id="tab-train" class="on" onclick="showTab('train')">🚆 ট্রেনের খবর</button>
+    <button id="tab-all" onclick="showTab('all')">📋 চলমান সব ট্রেন</button>
+    <button id="tab-station" onclick="showTab('station')">🏫 স্টেশন দিয়ে</button>
+  </div>
+
+  <div id="view-train">
+    <div id="trainOut"><div class="card loading">নিচে ট্রেনের নাম বা নম্বর লিখে খুঁজুন। যেমন: <b>৭৩৫</b> (অগ্নিবীণা) বা <b>৩৫৪</b> (ময়মনসিংহ লোকাল)।</div></div>
+  </div>
+
+  <div id="view-all" style="display:none">
+    <div class="card">
+      <div class="searchrow">
+        <input id="aq" type="search" placeholder="সব ট্রেনের মধ্যে খুঁজুন — নাম, নম্বর বা স্টেশন" oninput="loadAll()">
+        <button class="ghost" onclick="loadAll()">🔄 রিফ্রেশ</button>
+      </div>
+      <div class="mut" id="allMeta" style="margin-top:8px"></div>
+      <div id="allOut"><div class="loading">লোড হচ্ছে…</div></div>
+    </div>
+  </div>
+
+  <div id="view-station" style="display:none">
+    <div class="card">
+      <div class="searchrow">
+        <input id="sq" type="search" placeholder="স্টেশনের নাম লিখুন — যেমন ময়মনসিংহ, ঢাকা, তারাকান্দি" oninput="searchStation()">
+        <button onclick="searchStation()">খুঁজুন</button>
+      </div>
+      <div class="mut" style="margin-top:8px">কোন স্টেশনে কোন ট্রেন থামে, কয়টায় থামে — সেটা দেখাবে।</div>
+      <div id="stationOut" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <footer>
+    বিআর ১৯ • তথ্যের উৎস: <a href="https://trainkothai.com" target="_blank" rel="noopener">trainkothai.com</a> (যাত্রীদের শেয়ার করা অবস্থান, অফিসিয়াল বাংলাদেশ রেলওয়ে ফিড নয়)<br>
+    সময়সূচি অনুযায়ী আনুমানিক হিসাব কখনোই সরাসরি লাইভ অবস্থান নয় — নিশ্চিত হতে ট্রেনকোথাইয়ের লাইভ পাতা দেখুন।
+  </footer>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function bn(n){return String(n).replace(/\d/g,d=>"০১২৩৪৫৬৭৮৯"[d]);}
+function pill(st){return st==="running"?'<span class="pill run">● চলছে</span>':st==="not_departed"?'<span class="pill wait">○ এখনো ছাড়েনি</span>':st==="arrived"?'<span class="pill done">✓ পৌঁছে গেছে</span>':'<span class="pill no">তথ্য নেই</span>';}
+function tick(){const d=new Date();$("clock").textContent="এখন ঢাকায় সময়: "+d.toLocaleTimeString("bn-BD",{timeZone:"Asia/Dhaka",hour:"2-digit",minute:"2-digit"});}
+setInterval(tick,20000);tick();
+function showTab(t){
+  for(const x of ["train","all","station"]){$("view-"+x).style.display=x===t?"":"none";$("tab-"+x).classList.toggle("on",x===t);}
+  if(t==="all")loadAll();
+}
+async function searchTrain(){
+  const q=$("q").value.trim().replace(/[০-৯]/g,d=>"০১২৩৪৫৬৭৮৯".indexOf(d));if(!q)return;
+  const m=q.match(/\d+/);
+  if(!m){ // name search -> go to all list filtered
+    showTab("all");$("aq").value=q;loadAll();return;
+  }
+  const n=m[0];
+  $("trainOut").innerHTML='<div class="card loading">ট্রেন '+bn(n)+' এর খবর আনছি…</div>';
+  try{
+    const r=await fetch("/api/train/"+n);const d=await r.json();
+    if(!r.ok)throw new Error(d.error||"পাওয়া যায়নি");
+    renderTrain(d);
+  }catch(e){$("trainOut").innerHTML='<div class="err">❌ '+esc(e.message)+'</div>';}
+}
+function renderTrain(d){
+  const s=d.schedule||{};
+  const liveNote=d.live&&d.live.available
+    ? '<div class="card"><b>📍 লাইভ অবস্থান (সরাসরি)</b><pre>'+esc(JSON.stringify(d.live.data,null,2))+'</pre></div>'
+    : '<div class="card"><b>📍 লাইভ অবস্থান</b><p class="mut">সার্ভার থেকে সরাসরি লাইভ অবস্থান এখন আনা যাচ্ছে না — '+esc(d.live?d.live.reason:"")+'। নিচের বোতামে চাপ দিলে তোমার ব্রাউজারে ট্রেনকোথাইয়ের লাইভ পাতা খুলবে, সেখানে সরাসরি অবস্থান, গতি আর দেরি দেখাবে।</p><a href="'+esc(d.trackUrl)+'" target="_blank" rel="noopener"><button>🔴 ট্রেনকোথাইতে লাইভ দেখুন</button></a></div>';
+  const hist=(d.delayHistory&&d.delayHistory.runs||[]).map(r=>'<span>'+bn(r.day)+' নভে: +'+bn(r.delayMin)+' মি</span>').join("");
+  const stops=(d.stops||[]).map((st,i)=>{
+    const passed=s.state==="running"&&s.lastPassed&&st.name===s.lastPassed.name;
+    const next=s.state==="running"&&s.nextStop&&st.name===s.nextStop.name;
+    return '<tr><td>'+(passed?"✅ ":next?"➡️ ":"")+esc(st.bn||st.name)+'<br><span class="mut">'+esc(st.name)+'</span></td><td>'+bn(st.sched)+'</td><td>'+bn(st.km)+' কিমি</td></tr>';
+  }).join("");
+  $("trainOut").innerHTML=
+   '<div class="card"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><div><div class="big">'+esc(d.name)+' ('+bn(d.number)+')</div><div class="mut">'+esc(d.from||"")+' → '+esc(d.to||"")+' • '+(d.duration||"")+'</div></div>'+pill(s.state)+'</div>'
+   +'<div class="kv"><div><span>ছাড়ে</span><b>'+bn(s.departure||"—")+'</b></div><div><span>পৌঁছায় (সময়সূচি)</span><b>'+bn(s.arrival||"—")+'</b></div>'
+   +'<div><span>গড় দেরি (গত ৭ দিন)</span><b>'+(d.avgDelayText?bn(d.avgDelayText):"তথ্য নেই")+'</b></div><div><span>গড় দেরি ধরে আনুমানিক পৌঁছাবে</span><b>'+(s.etaByAvgDelay?bn(s.etaByAvgDelay):"—")+'</b></div></div>'
+   +(s.state==="running"?'<div><b>সময়সূচি অনুযায়ী আনুমানিক অগ্রগতি: '+bn(s.progressPct)+'%</b><div class="bar"><i style="width:'+s.progressPct+'%"></i></div><div class="mut">শেষ পার হওয়া স্টেশন: <b>'+esc(s.lastPassed?s.lastPassed.bn||s.lastPassed.name:"—")+'</b> ('+bn(s.lastPassed?s.lastPassed.sched:"")+' ) • পরের স্টেশন: <b>'+esc(s.nextStop?s.nextStop.bn||s.nextStop.name:"—")+'</b> ('+bn(s.nextStop?s.nextStop.sched:"")+', আরও '+bn(s.nextStop?s.nextStop.inMin:"")+' মিনিট) • '+bn(s.stopsCleared||0)+'/'+bn(s.totalStops||0)+' স্টেশন পার হয়েছে</div><div class="mut" style="margin-top:4px">⚠️ এটা সময়সূচি দিয়ে হিসাব করা আনুমানিক অবস্থান — সরাসরি লাইভ নয়।</div></div>'
+     :s.state==="not_departed"?'<p class="mut">ট্রেনটি আজ এখনো ছাড়েনি। ছাড়বে '+bn(s.departure)+' এ, '+(s.departsInMin!=null?'আরও '+bn(s.departsInMin)+' মিনিট পর':'')+'।</p>'
+     :'<p class="mut">সময়সূচি অনুযায়ী ট্রেনটি গন্তব্যে পৌঁছে গেছে।</p>')
+   +'<p class="mut">দেখার সময় (ঢাকা): '+bn(d.observedAtDhaka)+' • তথ্যের উৎস: ট্রেনকোথাই</p>'
+   +'<button class="ghost small" onclick="searchTrain()">🔄 আবার দেখুন</button></div>'
+   +liveNote
+   +'<div class="card"><b>🕐 গত ৭ দিনের দেরি</b><div class="hist">'+(hist||'<span class="mut">তথ্য নেই</span>')+'</div></div>'
+   +'<div class="card"><b>🚉 রুটের সময়সূচি ('+bn((d.stops||[]).length)+' স্টেশন)</b><table><tr><th>স্টেশন</th><th>সময়</th><th>দূরত্ব</th></tr>'+stops+'</table><p class="mut">ক্লাস: '+esc(d.classes||"—")+' • চলার দিন: '+esc(d.operatingDays||"প্রতিদিন")+'</p></div>';
+}
+let allCache=[];
+async function loadAll(){
+  const q=($("aq").value||"").trim();
+  $("allOut").innerHTML='<div class="loading">লোড হচ্ছে…</div>';
+  try{
+    const r=await fetch("/api/trains?q="+encodeURIComponent(q));const d=await r.json();
+    $("allMeta").textContent="মোট "+bn(d.total)+" ট্রেনের তালিকা • দেখাচ্ছে "+bn(d.count)+" টি • ঢাকায় সময় "+bn(d.nowDhaka)+" • সময়সূচি অনুযায়ী অবস্থা (লাইভ নয়)";
+    $("allOut").innerHTML=d.trains.map(t=>'<div class="trainrow" onclick="openTrain('+t.number+')"><div><b>'+esc(t.name)+' ('+bn(t.number)+')</b><br><span class="mut">'+esc(t.from||"")+' → '+esc(t.to||"")+' • ছাড়ে '+bn(t.departure||"—")+' • পৌঁছায় '+bn(t.arrival||"—")+(t.avgDelayMin!=null?' • গড় দেরি +'+bn(t.avgDelayMin)+' মি':'')+'</span></div><div>'+pill(t.scheduleState)+'</div></div>').join("")||'<div class="loading">কোনো ট্রেন পাওয়া যায়নি।</div>';
+  }catch(e){$("allOut").innerHTML='<div class="err">❌ তালিকা আনা যাচ্ছে না।</div>';}
+}
+function openTrain(n){showTab("train");$("q").value=n;searchTrain();}
+async function searchStation(){
+  const q=$("sq").value.trim();if(q.length<2){$("stationOut").innerHTML="";return;}
+  $("stationOut").innerHTML='<div class="loading">খুঁজছি…</div>';
+  try{
+    const r=await fetch("/api/station?q="+encodeURIComponent(q));const d=await r.json();
+    $("stationOut").innerHTML=d.count?('<p class="mut">"'+esc(q)+'" স্টেশনে থামে '+bn(d.count)+' টি ট্রেন:</p>'+d.trains.map(t=>'<div class="trainrow" onclick="openTrain('+t.trainNumber+')"><div><b>'+esc(t.trainName)+' ('+bn(t.trainNumber)+')</b><br><span class="mut">'+esc(t.from)+' → '+esc(t.to)+' • এই স্টেশনে '+bn(t.sched)+' • '+esc(t.stationBn||t.station)+'</span></div><div>'+pill(t.scheduleState)+'</div></div>').join("")):'<div class="loading">এই নামে কোনো স্টেশন পাওয়া যায়নি। বাংলা বা ইংরেজি নাম লিখে দেখুন।</div>';
+  }catch(e){$("stationOut").innerHTML='<div class="err">❌ খোঁজা যাচ্ছে না।</div>';}
+}
+$("q").addEventListener("keydown",e=>{if(e.key==="Enter")searchTrain();});
+$("sq").addEventListener("keydown",e=>{if(e.key==="Enter")searchStation();});
+</script>
+</body>
+</html>
