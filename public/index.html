@@ -58,7 +58,7 @@ footer{color:var(--mut);font-size:13px;line-height:1.6;text-align:center;padding
   </div>
 </header>
 <main>
-  <div class="notice">ℹ️ <b>লাইভ অবস্থান সম্পর্কে সত্যি কথা:</b> এই অ্যাপে ট্রেনের সময়সূচি, রুট, গত ৭ দিনের দেরির হিসাব আর সময়সূচি অনুযায়ী আনুমানিক অবস্থান দেখানো হয়। ট্রেনের <b>একদম সরাসরি অবস্থান</b> ট্রেনকোথাইয়ের লাইভ সার্ভারে থাকে, যেখানে ঢুকতে ব্রাউজারে মানুষের যাচাই (ক্লাউডফ্লেয়ার) লাগে — সার্ভার থেকে সেটা আনা যায় না। তাই প্রতিটি ট্রেনের নিচে <b>“ট্রেনকোথাইতে লাইভ দেখুন”</b> বোতাম আছে — চাপ দিলেই ব্রাউজারে সরাসরি লাইভ খুলবে। তথ্য: ট্রেনকোথাই (যাত্রীদের শেয়ার করা অবস্থান), বাংলাদেশ রেলওয়ের অফিসিয়াল ফিড নয়।</div>
+  <div class="notice">ℹ️ <b>লাইভ অবস্থান সম্পর্কে সত্যি কথা:</b> এই অ্যাপে ট্রেনের সময়সূচি, রুট, গত ৭ দিনের দেরির হিসাব আর সময়সূচি অনুযায়ী আনুমানিক অবস্থান দেখানো হয়। ট্রেনের <b>একদম সরাসরি অবস্থান</b> ট্রেনকোথাইয়ের লাইভ সার্ভারে থাকে, যেখানে ঢুকতে ব্রাউজারে মানুষের যাচাই (ক্লাউডফ্লেয়ার) লাগে — সার্ভার থেকে সেটা আনা যায় না। তাই প্রতিটি ট্রেনের নিচে <b>“ট্রেনকোথাইতে লাইভ দেখুন”</b> বোতাম আছে — চাপ দিলেই ব্রাউজারে সরাসরি লাইভ খুলবে। তথ্য: ট্রেনকোথাই (যাত্রীদের শেয়ার করা অবস্থান), বাংলাদেশ রেলওয়ের অফিসিয়াল ফিড নয়। <b>নতুন:</b> তুমি নিজে ট্রেনে থাকলে ট্রেনের পাতায় <b>“লাইভ শেয়ার শুরু করুন”</b> চাপ দিলে তোমার ফোনের জিপিএস থেকে ওই ট্রেনের আসল লাইভ অবস্থান অ্যাপে দেখাবে — ঠিক ট্রেনকোথাই যেভাবে পায়।</div>
 
   <div class="card">
     <div class="searchrow">
@@ -150,9 +150,57 @@ function renderTrain(d){
      :'<p class="mut">গড় দেরি অনুযায়ী ট্রেনটি গন্তব্যে পৌঁছে গেছে'+(s.estimatedArrival?' (আনুমানিক '+bn(s.estimatedArrival)+')':'')+'।</p>')
    +'<p class="mut">দেখার সময় (ঢাকা): '+bn(d.observedAtDhaka)+' • তথ্যের উৎস: ট্রেনকোথাই</p>'
    +'<button class="ghost small" onclick="searchTrain()">🔄 আবার দেখুন</button></div>'
+   +liveShareHtml(d)
+   +shareBoxHtml(d)
    +liveNote
    +'<div class="card"><b>🕐 গত ৭ দিনের দেরি</b><div class="hist">'+(hist||'<span class="mut">তথ্য নেই</span>')+'</div></div>'
    +'<div class="card"><b>🚉 রুটের সময়সূচি ('+bn((d.stops||[]).length)+' স্টেশন)</b><table><tr><th>স্টেশন</th><th>সময়</th><th>দূরত্ব</th></tr>'+stops+'</table><p class="mut">ক্লাস: '+esc(d.classes||"—")+' • চলার দিন: '+esc(d.operatingDays||"প্রতিদিন")+'</p></div>';
+  startLivePoll(d.number);
+}
+function liveShareHtml(d){
+  const s=d.sharedLive;
+  if(!s) return '<div class="card" id="liveShareCard"><b>🔴 লাইভ (যাত্রীর শেয়ার করা)</b><p class="mut">এই ট্রেনের কেউ এখন লাইভ শেয়ার করছে না। তুমি এই ট্রেনে থাকলে নিচের বোতামে চাপ দিয়ে লাইভ শেয়ার করতে পারো।</p></div>';
+  const mapUrl="https://www.openstreetmap.org/?mlat="+s.lat+"&mlon="+s.lng+"#map=15/"+s.lat+"/"+s.lng;
+  return '<div class="card" id="liveShareCard" style="border:2px solid #0a7a3d;background:#e6f4ea"><b>🔴 লাইভ — যাত্রীর ফোন থেকে সরাসরি</b><p>গতি: <b>'+(s.speedKmh!=null?bn(s.speedKmh)+" কিমি/ঘণ্টা":"—")+'</b> • আপডেট: <b>'+bn(s.ageSec)+' সেকেন্ড আগে</b></p><p class="mut">এটা আন্দাজ নয় — ট্রেনে থাকা যাত্রীর ফোনের জিপিএস থেকে আসা আসল অবস্থান।</p><a href="'+mapUrl+'" target="_blank" rel="noopener"><button class="small">🗺️ ম্যাপে অবস্থান দেখুন</button></a></div>';
+}
+function shareBoxHtml(d){
+  return '<div class="card"><b>📍 আমি এই ট্রেনে আছি</b><p class="mut">তুমি এখন এই ট্রেনে থাকলে বোতামে চাপ দাও — তোমার ফোনের জিপিএস থেকে এই ট্রেনের আসল লাইভ অবস্থান অ্যাপে দেখাবে। লোকেশন শুধু এই ট্রেনের লাইভ দেখানোর কাজে ব্যবহার হয়।</p><button id="shareBtn" onclick="startShare('+d.number+')">📍 লাইভ শেয়ার শুরু করুন</button> <button id="stopShareBtn" class="ghost" style="display:none" onclick="stopShare()">⏹️ শেয়ার বন্ধ করুন</button><p class="mut" id="shareStatus"></p></div>';
+}
+let shareWatchId=null, sharePostTimer=null, shareTrainNo=null, lastSharePos=null;
+function startShare(n){
+  if(!navigator.geolocation){const st=$("shareStatus");if(st)st.textContent="এই ব্রাউজারে লোকেশন পাওয়া যাচ্ছে না।";return;}
+  shareTrainNo=n;
+  const st=$("shareStatus"); if(st) st.textContent="লোকেশন চাইছি… অনুমতি দিন।";
+  navigator.geolocation.getCurrentPosition(p=>{lastSharePos=p;postShare();},e=>{const s2=$("shareStatus");if(s2)s2.textContent="লোকেশন পাওয়া যায়নি: "+e.message;},{enableHighAccuracy:true,timeout:15000});
+  shareWatchId=navigator.geolocation.watchPosition(p=>{lastSharePos=p;},()=>{},{enableHighAccuracy:true});
+  sharePostTimer=setInterval(postShare,10000);
+  const b=$("shareBtn"); if(b) b.style.display="none";
+  const s=$("stopShareBtn"); if(s) s.style.display="";
+}
+async function postShare(){
+  if(!lastSharePos||!shareTrainNo)return;
+  const c=lastSharePos.coords;
+  try{
+    await fetch("/api/live/share",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({train:shareTrainNo,lat:c.latitude,lng:c.longitude,speedKmh:c.speed!=null?c.speed*3.6:null,accuracyM:c.accuracy})});
+    const st=$("shareStatus"); if(st) st.textContent="✅ লাইভ শেয়ার চলছে — "+new Date().toLocaleTimeString("bn-BD",{timeZone:"Asia/Dhaka",hour:"2-digit",minute:"2-digit",second:"2-digit"})+" এ অবস্থান পাঠানো হয়েছে। অ্যাপ খোলা রাখুন।";
+  }catch(e){}
+}
+function stopShare(){
+  if(shareWatchId!=null)navigator.geolocation.clearWatch(shareWatchId);
+  clearInterval(sharePostTimer); shareWatchId=null; sharePostTimer=null; shareTrainNo=null; lastSharePos=null;
+  const b=$("shareBtn"); if(b) b.style.display="";
+  const s=$("stopShareBtn"); if(s) s.style.display="none";
+  const st=$("shareStatus"); if(st) st.textContent="লাইভ শেয়ার বন্ধ করা হয়েছে।";
+}
+let livePollTimer=null;
+function startLivePoll(n){
+  clearInterval(livePollTimer);
+  livePollTimer=setInterval(async()=>{
+    try{const r=await fetch("/api/live/"+n);const d=await r.json();
+      const el=$("liveShareCard"); if(!el)return;
+      el.outerHTML=liveShareHtml({sharedLive:d.available?d:null});
+    }catch(e){}
+  },15000);
 }
 let allCache=[];
 async function loadAll(){
@@ -164,7 +212,7 @@ async function loadAll(){
     // চলমান ট্রেন উপরে, এখনো না ছাড়া মাঝখানে, পৌঁছে যাওয়া নিচে
     const order={running:0,not_departed:1,arrived:2,unknown:3};
     const sorted=[...(d.trains||[])].sort((a,b)=>(order[a.scheduleState]!=null?order[a.scheduleState]:3)-(order[b.scheduleState]!=null?order[b.scheduleState]:3));
-    $("allOut").innerHTML=sorted.map(t=>'<div class="trainrow" onclick="openTrain('+t.number+')"><div><b>'+esc(t.name)+' ('+bn(t.number)+')</b><br><span class="mut">'+esc(t.from||"")+' → '+esc(t.to||"")+' • ছাড়ে '+bn(t.departure||"—")+' • পৌঁছায় '+bn(t.arrival||"—")+(t.avgDelayMin!=null?' • গড় দেরি +'+bn(t.avgDelayMin)+' মি':'')+'</span></div><div>'+pill(t.scheduleState)+'</div></div>').join("")||'<div class="loading">কোনো ট্রেন পাওয়া যায়নি।</div>';
+    $("allOut").innerHTML=sorted.map(t=>'<div class="trainrow" onclick="openTrain('+t.number+')"><div><b>'+esc(t.name)+' ('+bn(t.number)+')</b><br><span class="mut">'+esc(t.from||"")+' → '+esc(t.to||"")+' • ছাড়ে '+bn(t.departure||"—")+' • পৌঁছায় '+bn(t.arrival||"—")+(t.avgDelayMin!=null?' • গড় দেরি +'+bn(t.avgDelayMin)+' মি':'')+'</span></div><div>'+(t.live?'<span class="pill run">🔴 লাইভ</span> ':'')+pill(t.scheduleState)+'</div></div>').join("")||'<div class="loading">কোনো ট্রেন পাওয়া যায়নি।</div>';
   }catch(e){$("allOut").innerHTML='<div class="err">❌ তালিকা আনা যাচ্ছে না।</div>';}
 }
 function openTrain(n){showTab("train");$("q").value=n;searchTrain();}
