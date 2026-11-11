@@ -255,11 +255,60 @@ async function fetchLive(number) {
 
 // ---- API ----
 app.use(express.static(path.join(__dirname, "public")));
+app.use(express.json({ limit: "16kb" }));
+
+// ---- Passenger-shared live positions (real GPS, like TrainKothai) ----
+// TrainKothai's own live feed cannot be fetched by a server (Cloudflare
+// Turnstile human check). The only honest way for THIS app to show a real
+// live position is the same way TrainKothai gets it: a passenger on the
+// train shares their phone's GPS. Shares live in memory only, and go stale
+// after 2 minutes without a new position — a stale share is never shown
+// as live.
+const LIVE_SHARE_TTL_MS = 2 * 60 * 1000;
+const liveShares = new Map(); // number -> {number, lat, lng, speedKmh, accuracyM, updatedAt}
+function freshShare(number) {
+  const s = liveShares.get(number);
+  if (!s) return null;
+  if (Date.now() - s.updatedAt > LIVE_SHARE_TTL_MS) { liveShares.delete(number); return null; }
+  return { ...s, ageSec: Math.round((Date.now() - s.updatedAt) / 1000) };
+}
+setInterval(() => {
+  const now = Date.now();
+  for (const [n, s] of liveShares) if (now - s.updatedAt > LIVE_SHARE_TTL_MS) liveShares.delete(n);
+}, 30000);
 
 app.get("/api/health", (req, res) => {
   res.json({ ok: true, app: "BR 19", nowDhaka: dhakaNow().hhmm,
              snapshotTrains: snapshot.trains.length, snapshotGeneratedAt: snapshot.generatedAt,
              source: "trainkothai.com" });
+});
+
+app.post("/api/live/share", (req, res) => {
+  const number = parseInt(req.body && req.body.train, 10);
+  const lat = Number(req.body && req.body.lat);
+  const lng = Number(req.body && req.body.lng);
+  const speedKmh = req.body && req.body.speedKmh != null ? Number(req.body.speedKmh) : null;
+  const accuracyM = req.body && req.body.accuracyM != null ? Number(req.body.accuracyM) : null;
+  if (!number || !isFinite(lat) || !isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180)
+    return res.status(400).json({ error: "সঠিক ট্রেন নম্বর আর অবস্থান দিন" });
+  liveShares.set(number, { number, lat, lng,
+    speedKmh: speedKmh != null && isFinite(speedKmh) ? Math.round(speedKmh) : null,
+    accuracyM: accuracyM != null && isFinite(accuracyM) ? Math.round(accuracyM) : null,
+    updatedAt: Date.now() });
+  res.json({ ok: true, train: number, nowDhaka: dhakaNow().hhmm });
+});
+
+app.get("/api/live", (req, res) => {
+  const all = [];
+  for (const n of liveShares.keys()) { const s = freshShare(n); if (s) all.push(s); }
+  res.json({ count: all.length, nowDhaka: dhakaNow().hhmm, trains: all });
+});
+
+app.get("/api/live/:number", (req, res) => {
+  const number = parseInt(req.params.number, 10);
+  const s = number ? freshShare(number) : null;
+  if (!s) return res.json({ available: false, train: number || null });
+  res.json({ available: true, ...s });
 });
 
 app.get("/api/trains", (req, res) => {
@@ -271,6 +320,7 @@ app.get("/api/trains", (req, res) => {
              duration: t.duration, departure: t.stops[0] ? t.stops[0].sched : null,
              arrival: t.stops.length ? t.stops[t.stops.length - 1].sched : null,
              scheduleState: sp.state, scheduleLabel: sp.label,
+             live: !!freshShare(t.number),
              avgDelayMin: t.delayHistory ? t.delayHistory.avgMin : null,
              stops: t.stops.length };
   });
@@ -293,6 +343,7 @@ app.get("/api/train/:number", async (req, res) => {
     if (!record) return res.status(502).json({ error: "ট্রেনের তথ্য এখন আনা যাচ্ছে না, একটু পরে আবার চেষ্টা করুন", detail: e.message });
   }
   const live = await fetchLive(number);
+  const sharedLive = freshShare(number);
   const sp = scheduleProgress(record);
   res.json({ number, name: record.name, from: record.from, to: record.to,
              duration: record.duration, classes: record.classes,
@@ -300,7 +351,7 @@ app.get("/api/train/:number", async (req, res) => {
              stops: record.stops, schedule: sp,
              avgDelayText: record.delayHistory && record.delayHistory.avgMin != null
                ? fmtDur(record.delayHistory.avgMin) : null,
-             live, trackUrl: record.trackUrl,
+             live, sharedLive, trackUrl: record.trackUrl,
              observedAtDhaka: dhakaNow().hhmm, dataSource: source,
              snapshotGeneratedAt: snapshot.generatedAt });
 });
